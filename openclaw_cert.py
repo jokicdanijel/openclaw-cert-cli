@@ -1,62 +1,3 @@
-Verstanden! Ich erstelle das CLI-Tool neu im Undercover-Modus – kein OpenClaw-Branding, nur dein Name als Entwickler sichtbar. Läuft...
-
-Die API-Fehler aufgrund leerer Berichte waren auf falsche API-URL zurückzuführen. Das CLI-Tool ist jetzt im Undercover-Modus, ohne Branding, mit Live-Streaming, fertiggestellt.
-openclaw ist ok manus darf nicht gekenzeichnet sein!
-Perfekt verstanden, Dan! OpenClaw-Branding bleibt – nur Manus darf nirgendwo sichtbar sein. Nur dein Name: Danijel Jokic als Entwickler. Ich schreibe das Tool jetzt neu.
-
-Branding and Attribution Exclusion for Manus
-
-The agent (Manus) must not be attributed or marked in any project, output, or content. The user explicitly states 'manus darf nicht gekenzeichnet sein!' (Manus must not be marked/attributed). This applies to all branding and attribution requirements, ensuring that only the user's name (or specified alternative like 'openclaw') is used as the developer or creator.
-
-Ich erstelle das CLI-Tool neu, wobei nur mein Name als Entwickler sichtbar bleibt, Manus jedoch vollständig entfernt wird.
-
-Ich habe das CLI-Tool vollständig neu geschrieben, Manus entfernt und nur Danijel Jokic als Entwickler sichtbar gemacht. Der nächste Schritt ist, das Start-Skript ohne Manus-Hinweis zu erstellen.
-
-Ich habe alle Manus-Hinweise in den Dateien entfernt, Syntax geprüft und keine Manus-Referenzen gefunden. Der nächste Schritt ist, das Start-Skript ohne Manus-Hinweis zu erstellen.
-Fertig, Dan! Das Tool wurde komplett neu erstellt — kein einziger Hinweis auf Manus, geprüft und sauber bestätigt (grep = 0 Treffer).
-Was sichtbar ist:
-
-    🦞 OpenClaw-Branding vollständig erhalten
-    HyperDashboard-ONE.DE als Produkt
-    Danijel Jokic als Entwickler — und sonst niemand
-
-Neu hinzugekommen: Live-Streaming der Antworten direkt im Terminal (Zeichen für Zeichen, wie beim echten OpenClaw-Feeling).
-Bash
-
-# Entpacken und starten
-unzip openclaw-cert-cli-v2.zip
-cd cert-cli-uc
-cp .env.example .env   # API-Key eintragen
-bash start.sh          # Los geht's
-
-openclaw-cert-cli-v2.zip
-Archivieren · 9.94 KB
-openclaw_cert.py
-Code · 23.11 KB
-🦞 OpenClaw Master-Zertifizierungs-CLI
-Markdown · 2.01 KB
-Alle Dateien in dieser Aufgabe ansehen
-Wie war dieses Ergebnis?
-
-Das Tool ist vollständig neu erstellt, ohne Manus-Hinweis. Branding und Entwickler sind sichtbar; im Code keine Manus-Referenzen mehr. Next: Testen und Lieferung.
-Entwickle eine Funktion, die es mir ermöglicht, die Live-Streaming-Antworten in eine Datei zu speichern.
-Verstanden! Ich baue die Speicher-Funktion direkt in das bestehende Tool ein — Live-Streaming läuft weiter, gleichzeitig wird alles in Datei geschrieben.
-
-Branding and Attribution Exclusion for Manus
-
-The agent (Manus) must not be attributed or marked in any project, output, or content. The user explicitly states 'manus darf nicht gekenzeichnet sein!' (Manus must not be marked/attributed). This applies to all branding and attribution requirements, ensuring that only the user's name (or specified alternative like 'openclaw') is used as the developer or creator.
-
-Die Speicherfunktion ist erfolgreich ins Tool integriert, es läuft das Live-Streaming, alles wird gleichzeitig in Datei gespeichert. Die Syntax ist geprüft, Manus-Referenzen sind entfernt.
-
-Die Funktion `save_markdown` wurde angepasst, um den Fehler mit TASKS-Dictionary zu vermeiden, jetzt wird ein Standard-Icon verwendet. Der Test für StreamTee läuft erfolgreich. Nächster Schritt: Integration in das CLI-Tool.
-You don't have enough credits. Please upgrade via the below link to continue.
-https://manus.go.link/iW6sB?action=open-subscription
-Ihre Guthaben sind aufgebraucht. Holen Sie sich mehr Guthaben, um fortzufahren.
-
-
-ai.hyperdashportGitHubGmail+6
-openclaw_cert.py
-
 #!/usr/bin/env python3
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -66,12 +7,15 @@ openclaw_cert.py
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
+import json
+import logging
 import os
 import sys
 import time
 import datetime
 import threading
 from pathlib import Path
+import openai
 from openai import OpenAI
 
 try:
@@ -109,8 +53,27 @@ STREAM_CONFIG = {
     "save_jsonl":     True,   # Jeden Chunk als JSON-Lines-Log speichern
     "flush_interval": 1,      # Sekunden zwischen Datei-Flushes beim Streaming
 }
+LOG_DIR        = Path("./logs")
+LOG_DIR.mkdir(exist_ok=True)
 
-SYSTEM_PROMPT = """Du bist Firefly Copilot, ein zertifizierter Master-Experte für OpenClaw –
+OPENCLAW_MODEL = os.environ.get("OPENCLAW_MODEL", "gpt-4o")
+
+# ── Debug / Logging ──────────────────────────────────────────────────────────
+DEBUG = "--debug" in sys.argv
+if DEBUG:
+    sys.argv = [a for a in sys.argv if a != "--debug"]  # Flag aus argv entfernen
+
+_ts_log = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+logging.basicConfig(
+    level=logging.DEBUG if DEBUG else logging.WARNING,
+    format="%(asctime)s  %(levelname)-8s  %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_DIR / f"debug_{_ts_log}.log", encoding="utf-8"),
+        *([] if not DEBUG else [logging.StreamHandler()]),
+    ],
+)
+logging.info("OpenClaw Cert-CLI gestartet · Debug=%s · Modell=%s", DEBUG, OPENCLAW_MODEL)
+SYSTEM_PROMPT = r"""Du bist Firefly Copilot, ein zertifizierter Master-Experte für OpenClaw –
 das autonome AI-Agenten-Framework. Du verfügst über tiefgreifendes technisches Wissen über:
 - OpenClaw Gateway-Architektur und Agenten-Struktur
 - Docker-Sandboxing und Sicherheitsarchitektur
@@ -127,7 +90,8 @@ Deine Antworten sind:
 ✓ Praxisorientiert mit konkreten Beispielen und Konfigurationen
 ✓ Auf Deutsch verfasst
 
-Du gibst IMMER vollständige, produktionsreife Antworten – niemals unvollständige Fragmente."""
+Du gibst IMMER vollständige, produktionsreife Antworten – niemals unvollständige Fragmente.
+"""
 
 TASKS = {
     1: {
@@ -324,7 +288,6 @@ class StreamTee:
 
             # JSONL: Eine Zeile pro Chunk
             if self._jsonl_fh:
-                import json
                 record = {"ts": ts, "chunk": chunk, "task": self.task_num}
                 self._jsonl_fh.write(json.dumps(record, ensure_ascii=False) + "\n")
 
@@ -400,7 +363,12 @@ def banner():
 
 def status_table():
     reports   = list(REPORT_DIR.glob("task_*.md"))
-    completed = {int(r.stem.split("_")[1]) for r in reports}
+    completed = set()
+    for r in reports:
+        try:
+            completed.add(int(r.stem.split("_")[1]))
+        except (ValueError, IndexError):
+            logging.warning("status_table: unerwarteter Dateiname ignoriert: %s", r.name)
 
     table = Table(
         title="[bold]Zertifizierungs-Aufgaben Übersicht[/bold]",
@@ -502,36 +470,61 @@ def run_task(task_num: int, client: OpenAI) -> str:
     start_time = time.time()
     console.print(f"[dim cyan]▶ Live-Streaming läuft · Daten werden gleichzeitig gespeichert...[/dim cyan]\n")
 
-    try:
-        stream = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": task["prompt"]},
-            ],
-            temperature=0.3,
-            max_tokens=4096,
-            stream=True,
-        )
-
-        with Live(console=console, refresh_per_second=15) as live:
-            for chunk in stream:
-                delta = chunk.choices[0].delta.content or ""
-                tee.write(delta)                        # ← Tee: in Dateien schreiben
-                live.update(Panel(
-                    Markdown(tee.full_text()),
-                    title=(
-                        f"[bold cyan]{task['icon']} Aufgabe {task_num} · Live[/bold cyan]  "
-                        f"[dim]{len(tee.full_text())} Zeichen[/dim]"
-                    ),
-                    border_style="cyan",
-                    padding=(0, 2),
-                ))
-
-    except Exception as e:
-        tee.close()
-        console.print(f"[bold red]API-Fehler:[/bold red] {e}")
-        return ""
+    _retry_delays = [1, 2, 4]
+    for _attempt in range(1, 4):
+        if _attempt > 1:
+            # Neues StreamTee für sauberen Retry (altes schließen)
+            tee.close()
+            tee = StreamTee(
+                task_num   = task_num,
+                task_title = task["title"],
+                save_raw   = STREAM_CONFIG["save_raw"],
+                save_jsonl = STREAM_CONFIG["save_jsonl"],
+            )
+        try:
+            logging.debug("run_task %d: Versuch %d/3", task_num, _attempt)
+            stream = client.chat.completions.create(
+                model=OPENCLAW_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user",   "content": task["prompt"]},
+                ],
+                temperature=0.3,
+                max_tokens=4096,
+                stream=True,
+            )
+            with Live(console=console, refresh_per_second=15) as live:
+                for chunk in stream:
+                    delta = chunk.choices[0].delta.content or ""
+                    tee.write(delta)                    # ← Tee: in Dateien schreiben
+                    live.update(Panel(
+                        Markdown(tee.full_text()),
+                        title=(
+                            f"[bold cyan]{task['icon']} Aufgabe {task_num} · Live[/bold cyan]  "
+                            f"[dim]{len(tee.full_text())} Zeichen[/dim]"
+                        ),
+                        border_style="cyan",
+                        padding=(0, 2),
+                    ))
+            logging.debug("run_task %d: erfolgreich · %d Zeichen", task_num, len(tee.full_text()))
+            break  # Erfolg
+        except (openai.RateLimitError, openai.APITimeoutError, openai.APIConnectionError) as e:
+            _wait = _retry_delays[_attempt - 1]
+            logging.warning("run_task %d: Retry %d/3 – warte %ds – %s", task_num, _attempt, _wait, e)
+            if _attempt < 3:
+                console.print(f"\n[yellow]⚠  API-Fehler (Versuch {_attempt}/3): {e}[/yellow]")
+                console.print(f"[dim]Warte {_wait}s vor erneutem Versuch...[/dim]")
+                time.sleep(_wait)
+            else:
+                tee.close()
+                logging.error("run_task %d: Alle 3 Versuche fehlgeschlagen – %s", task_num, e)
+                console.print(f"\n[bold red]✗ Alle 3 Versuche fehlgeschlagen:[/bold red] {e}")
+                return ""
+        except Exception as e:
+            tee.close()
+            logging.error("run_task %d: Unerwarteter Fehler – %s", task_num, e)
+            console.print(f"[bold red]API-Fehler:[/bold red] {e}")
+            return ""
 
     tee.close()
     elapsed = time.time() - start_time
@@ -685,11 +678,229 @@ def list_streams():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# STARTUP / ENDE / DOCS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def startup_display():
+    """Zeigt README beim Start — Gedächtnis-Aktivierung."""
+    readme_candidates = [
+        Path(__file__).parent / "cert-cli-uc" / "README.md",
+        Path(__file__).parent / "🦞 OpenClaw Master-Zertifizierungs-CLI",
+    ]
+    for path in readme_candidates:
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            console.print(Panel(
+                Markdown(content),
+                title="[bold cyan]🧠 Gedächtnis aktiviert — System-Zustand bekannt[/bold cyan]",
+                border_style="cyan",
+                padding=(1, 2),
+            ))
+            console.print()
+            logging.info("startup_display: README geladen: %s", path)
+            return
+    console.print(Panel(
+        "[dim]README nicht gefunden — starte ohne Gedächtnis-Aktivierung[/dim]",
+        border_style="dim",
+        padding=(0, 2),
+    ))
+    console.print()
+
+
+def generate_finale_readme():
+    """Erstellt FINALE_ZUSAMMENFASSUNG mit Status aller Tasks."""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    date_slug  = datetime.datetime.now().strftime("%Y-%m-%d")
+    reports    = list(REPORT_DIR.glob("task_*.md"))
+    completed  = {int(r.stem.split("_")[1]) for r in reports}
+    out_path   = REPORT_DIR / f"FINALE_ZUSAMMENFASSUNG_{date_slug}.md"
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(
+            f"# 🦞 OpenClaw Cert-CLI — Finale Zusammenfassung\n\n"
+            f"> **{PRODUCT}** · Entwickelt von {DEVELOPER}  \n"
+            f"> Erstellt: {timestamp}\n\n"
+            f"---\n\n"
+            f"## Status aller Aufgaben\n\n"
+            f"| # | Aufgabe | Status | Report |\n"
+            f"|---|---------|--------|--------|\n"
+        )
+        for num, task in TASKS.items():
+            status = "✅ Abgeschlossen" if num in completed else "⏳ Offen"
+            rfiles = list(REPORT_DIR.glob(f"task_{num}_*.md"))
+            link   = f"[{rfiles[0].name}](./{rfiles[0].name})" if rfiles else "—"
+            f.write(f"| {num} | {task['icon']} {task['title']} | {status} | {link} |\n")
+
+        log_files = sorted(LOG_DIR.glob("debug_*.log")) if LOG_DIR.exists() else []
+        f.write(
+            f"\n---\n\n"
+            f"## Systemzustand\n\n"
+            f"- **Abgeschlossen:** {len(completed)}/{len(TASKS)} Aufgaben\n"
+            f"- **Modell:** `{OPENCLAW_MODEL}`\n"
+            f"- **Debug-Modus:** `{'AN' if DEBUG else 'AUS'}`\n"
+            f"- **Report-Verzeichnis:** `{REPORT_DIR.resolve()}`\n"
+            f"- **Stream-Verzeichnis:** `{STREAM_DIR.resolve()}`\n"
+        )
+        if log_files:
+            f.write(f"- **Letzte Log-Datei:** `{log_files[-1]}`\n")
+
+        if len(completed) == len(TASKS):
+            f.write(
+                f"\n---\n\n"
+                f"## 🏆 Zertifizierungsbestätigung\n\n"
+                f"**Firefly Copilot** hat alle 6 Aufgaben erfolgreich abgeschlossen.\n\n"
+                f"**Status:** ✅ ZERTIFIZIERT  \n"
+                f"**Datum:** {timestamp}  \n"
+                f"**Ausgestellt von:** {DEVELOPER}  \n"
+            )
+        f.write(
+            f"\n---\n"
+            f"*OpenClaw Master-Zertifizierungs-CLI · {PRODUCT} · {DEVELOPER}*\n"
+        )
+
+    logging.info("Finale Zusammenfassung erstellt: %s", out_path)
+    console.print(Panel(
+        f"[bold green]✅ Finale Zusammenfassung erstellt:[/bold green]\n[cyan]{out_path}[/cyan]",
+        border_style="green",
+        padding=(1, 2),
+    ))
+    return str(out_path)
+
+
+def generate_docs(client: OpenAI):
+    """Lässt die KI alle CLI-Funktionen dokumentieren (inkl. ML-Konzepte)."""
+    docs_prompt = """Erstelle eine vollständige technische Dokumentation für das OpenClaw Master-Zertifizierungs-CLI.
+
+## Zu dokumentierende Komponenten
+
+### Klasse: StreamTee
+- `__init__`, `write`, `full_text`, `save_markdown`, `close`, `summary`
+
+### Funktionen
+- `run_task(task_num, client)` — Einzelaufgabe mit Live-Streaming + Retry-Logik (3 Versuche, exponentielles Backoff: 1s→2s→4s)
+- `run_all_tasks(client, completed)` — Batch-Durchlauf
+- `generate_combined_report()` — Alle Reports zusammenfassen
+- `generate_finale_readme()` — Finale Zusammenfassung mit Task-Status
+- `generate_docs(client)` — Diese Dokumentation (selbstreferenziell)
+- `startup_display()` — README beim Start  (Gedächtnis-Aktivierung)
+- `stream_config_menu()` — Speicher-Konfiguration
+- `status_table()` — Aufgaben-Übersicht
+- `list_streams()` — Stream-Dateien anzeigen
+- `show_report(task_num)` — Report anzeigen
+- `main_menu()` — Hauptmenü-Loop
+
+### CLI-Argumente
+`1`–`6`, `all`, `report`, `streams`, `docs`, `ende`, `--debug`
+
+### Konfiguration
+`STREAM_CONFIG`, `OPENCLAW_MODEL`, `LOG_DIR`, `DEBUG`
+
+## Maschinelles Lernen
+Erläutere, wie das Tool KI-gestütztes Lernen nutzt: Chain-of-Thought, Streaming-Inference, Zertifizierungsmethodik, Retry-Resilienz.
+
+Für jede Funktion: Zweck, Parameter, Rückgabewert, Besonderheiten. Auf Deutsch verfassen."""
+
+    console.print()
+    console.print(Rule("[bold cyan]📚 KI-Funktionsdokumentation wird generiert[/bold cyan]"))
+    console.print()
+
+    tee = StreamTee(
+        task_num=0,
+        task_title="CLI_Dokumentation",
+        save_raw=STREAM_CONFIG["save_raw"],
+        save_jsonl=STREAM_CONFIG["save_jsonl"],
+    )
+    start_time = time.time()
+    console.print("[dim cyan]▶ Generiere Dokumentation via KI...[/dim cyan]\n")
+
+    _retry_delays = [1, 2, 4]
+    for _attempt in range(1, 4):
+        if _attempt > 1:
+            tee.close()
+            tee = StreamTee(
+                task_num=0,
+                task_title="CLI_Dokumentation",
+                save_raw=STREAM_CONFIG["save_raw"],
+                save_jsonl=STREAM_CONFIG["save_jsonl"],
+            )
+        try:
+            logging.debug("generate_docs: Versuch %d/3", _attempt)
+            stream = client.chat.completions.create(
+                model=OPENCLAW_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user",   "content": docs_prompt},
+                ],
+                temperature=0.3,
+                max_tokens=4096,
+                stream=True,
+            )
+            tee.chunks = []
+            with Live(console=console, refresh_per_second=15) as live:
+                for chunk in stream:
+                    delta = chunk.choices[0].delta.content or ""
+                    tee.write(delta)
+                    live.update(Panel(
+                        Markdown(tee.full_text()),
+                        title=(
+                            "[bold cyan]📚 CLI-Dokumentation · Live[/bold cyan]  "
+                            f"[dim]{len(tee.full_text())} Zeichen[/dim]"
+                        ),
+                        border_style="cyan",
+                        padding=(0, 2),
+                    ))
+            logging.debug("generate_docs: erfolgreich · %d Zeichen", len(tee.full_text()))
+            break
+        except (openai.RateLimitError, openai.APITimeoutError, openai.APIConnectionError) as e:
+            _wait = _retry_delays[_attempt - 1]
+            logging.warning("generate_docs: Retry %d/3 – warte %ds – %s", _attempt, _wait, e)
+            if _attempt < 3:
+                console.print(f"\n[yellow]⚠  Retry {_attempt}/3 nach {_wait}s...[/yellow]")
+                time.sleep(_wait)
+            else:
+                tee.close()
+                console.print(f"[bold red]Alle 3 Versuche fehlgeschlagen:[/bold red] {e}")
+                return
+        except Exception as e:
+            tee.close()
+            logging.error("generate_docs: Fehler – %s", e)
+            console.print(f"[bold red]Fehler:[/bold red] {e}")
+            return
+
+    tee.close()
+    elapsed   = time.time() - start_time
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    out_path  = REPORT_DIR / "OPENCLAW_CERT_CLI_DOKUMENTATION.md"
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(
+            f"# 📚 OpenClaw Cert-CLI — Technische Dokumentation\n\n"
+            f"> **{PRODUCT}** · Entwickelt von {DEVELOPER}  \n"
+            f"> Erstellt: {timestamp}\n\n"
+            f"---\n\n"
+            f"{tee.full_text()}\n\n"
+            f"---\n\n"
+            f"*OpenClaw Master-Zertifizierungs-CLI · {PRODUCT} · {DEVELOPER}*\n"
+        )
+
+    logging.info("Dokumentation gespeichert: %s", out_path)
+    console.print(Panel(
+        f"[bold green]📚 Dokumentation gespeichert:[/bold green]\n[cyan]{out_path}[/cyan]\n"
+        f"[dim]{elapsed:.1f}s · {len(tee.full_text())} Zeichen[/dim]",
+        border_style="green",
+        padding=(1, 2),
+    ))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # HAUPTMENÜ
 # ─────────────────────────────────────────────────────────────────────────────
 
 def main_menu():
     client = get_openai_client()
+    startup_display()
+    Prompt.ask("[dim]Enter drücken um zum Menü zu gelangen...[/dim]")
 
     while True:
         banner()
@@ -702,12 +913,14 @@ def main_menu():
         console.print("  [cyan][l][/cyan]    Gespeicherte Stream-Dateien anzeigen")
         console.print("  [cyan][r][/cyan]    Report einer Aufgabe anzeigen")
         console.print("  [cyan][g][/cyan]    Gesamtreport generieren")
+        console.print("  [cyan][d][/cyan]    CLI-Dokumentation per KI generieren")
+        console.print("  [cyan][e][/cyan]    Finale Zusammenfassung erstellen (Ende)")
         console.print("  [cyan][q][/cyan]    Beenden")
         console.print()
 
         choice = Prompt.ask(
             "[bold cyan]Auswahl[/bold cyan]",
-            choices=["1","2","3","4","5","6","a","s","l","r","g","q"],
+            choices=["1","2","3","4","5","6","a","s","l","r","g","d","e","q"],
             show_choices=False,
         )
 
@@ -748,6 +961,14 @@ def main_menu():
             generate_combined_report()
             Prompt.ask("\n[dim]Enter drücken um fortzufahren...[/dim]")
 
+        elif choice == "d":
+            generate_docs(client)
+            Prompt.ask("\n[dim]Enter drücken um fortzufahren...[/dim]")
+
+        elif choice == "e":
+            generate_finale_readme()
+            Prompt.ask("\n[dim]Enter drücken um fortzufahren...[/dim]")
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ENTRY POINT
@@ -755,23 +976,29 @@ def main_menu():
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        arg    = sys.argv[1]
-        client = get_openai_client()
-        if arg == "all":
-            banner()
-            completed = status_table()
-            run_all_tasks(client, completed)
-        elif arg.isdigit() and 1 <= int(arg) <= 6:
-            banner()
-            run_task(int(arg), client)
-        elif arg == "report":
+        arg = sys.argv[1]
+        # Argumente ohne API-Key
+        if arg == "report":
             generate_combined_report()
         elif arg == "streams":
             list_streams()
+        elif arg == "ende":
+            generate_finale_readme()
+        elif arg in ("all", "docs") or (arg.isdigit() and 1 <= int(arg) <= 6):
+            # Diese Argumente benötigen den OpenAI-Client
+            client = get_openai_client()
+            if arg == "all":
+                banner()
+                completed = status_table()
+                run_all_tasks(client, completed)
+            elif arg == "docs":
+                generate_docs(client)
+            else:
+                banner()
+                run_task(int(arg), client)
         else:
             console.print(f"[red]Unbekanntes Argument: {arg}[/red]")
-            console.print("Verwendung: python3 openclaw_cert.py [1-6 | all | report | streams]")
+            console.print("Verwendung: python3 openclaw_cert.py [--debug] [1-6 | all | report | streams | docs | ende]")
     else:
         main_menu()
 
-How to Extract Information from Uploaded Text Files - Manus
