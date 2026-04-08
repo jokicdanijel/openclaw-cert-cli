@@ -1,0 +1,4 @@
+{
+    "python.defaultInterpreterPath": "/home/danijel-jd/.openclaw/.venv/bin/python3",
+    "python.terminal.activateEnvironment": true
+}

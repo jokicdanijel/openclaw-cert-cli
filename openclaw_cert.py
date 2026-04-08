@@ -836,7 +836,6 @@ Für jede Funktion: Zweck, Parameter, Rückgabewert, Besonderheiten. Auf Deutsch
                 max_tokens=4096,
                 stream=True,
             )
-            tee.chunks = []
             with Live(console=console, refresh_per_second=15) as live:
                 for chunk in stream:
                     delta = chunk.choices[0].delta.content or ""
