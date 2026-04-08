@@ -1,5 +1,0 @@
-# OpenClaw Stream · Aufgabe 1: Kernkonzepte des OpenClaw Systems
-# Gestartet: 2026-04-08T22:30:04.768457
-# HyperDashboard-ONE.DE · Danijel Jokic
-──────────────────────────────────────────────────────────────────────
-
