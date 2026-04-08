@@ -18,6 +18,13 @@ from pathlib import Path
 import openai
 from openai import OpenAI
 
+# .env automatisch laden (python-dotenv), falls vorhanden
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=Path(__file__).parent / ".env", override=False)
+except ImportError:
+    pass  # python-dotenv nicht installiert → kein Problem, start.sh übernimmt das
+
 try:
     from rich.console import Console
     from rich.panel import Panel
