@@ -1,0 +1,15 @@
+# Niemals in Git einchecken!
+.env
+
+# Reports (enthalten API-Antworten / proprietäre Inhalte)
+reports/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.mypy_cache/
+
+# Betriebssystem
+.DS_Store
+Thumbs.db

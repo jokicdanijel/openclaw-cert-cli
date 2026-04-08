@@ -1,0 +1,18 @@
+# Niemals in Git einchecken!
+.env
+**/.env
+
+# Reports
+reports/
+**/reports/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.mypy_cache/
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
