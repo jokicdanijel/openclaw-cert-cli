@@ -497,7 +497,7 @@ def run_task(task_num: int, client: OpenAI) -> str:
                     {"role": "user",   "content": task["prompt"]},
                 ],
                 temperature=0.3,
-                max_tokens=4096,
+                max_completion_tokens=4096,
                 stream=True,
             )
             with Live(console=console, refresh_per_second=15) as live:
@@ -840,7 +840,7 @@ Für jede Funktion: Zweck, Parameter, Rückgabewert, Besonderheiten. Auf Deutsch
                     {"role": "user",   "content": docs_prompt},
                 ],
                 temperature=0.3,
-                max_tokens=4096,
+                max_completion_tokens=4096,
                 stream=True,
             )
             with Live(console=console, refresh_per_second=15) as live:
