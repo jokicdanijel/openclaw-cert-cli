@@ -2,9 +2,13 @@
 .env
 **/.env
 
-# Reports
+# Reports & Streams & Logs (lokale Ausgabe)
 reports/
 **/reports/
+streams/
+**/streams/
+logs/
+**/logs/
 
 # Python
 __pycache__/
@@ -13,6 +17,13 @@ __pycache__/
 *.pyo
 .mypy_cache/
 
+# VS Code
+.vscode/
+
 # Betriebssystem
 .DS_Store
 Thumbs.db
+
+# Temporäre Artefakte
+]
+projekte.db

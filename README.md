@@ -1,88 +1,148 @@
 # 🦞 OpenClaw Master-Zertifizierungs-CLI
 
-## Kurzbeschreibung
+> **Interaktives CLI-Tool zur vollautomatischen KI-Zertifizierung mit GPT-Streaming**
 
-Python-basiertes CLI-Tool zur vollautomatischen Durchführung der **OpenClaw Master-Zertifizierung** via GPT-Streaming. Alle 6 Zertifizierungsaufgaben werden sequenziell ausgeführt, live im Terminal gestreamt und als Markdown-Reports gespeichert.
-
----
-
-## Zweck & Inhalt
-
-| Datei / Verzeichnis | Beschreibung | Status |
-|---|---|---|
-| `openclaw_cert.py` | Haupt-CLI — Zertifizierung, Streaming, Reports, Menü | ✅ Produktiv |
-| `start.sh` | Start-Skript mit venv-Erkennung und `.env`-Laden | ✅ Produktiv |
-| `.env.example` | Vorlage für Umgebungsvariablen | ✅ Vorhanden |
-| `.env` | Lokale Konfiguration (nicht in Git) | 🔒 Lokal |
-| `cert-cli-uc/` | Use-Case-Verzeichnis mit README + start.sh | ✅ Vorhanden |
-| `reports/` | Generierte Markdown-Reports (nicht in Git) | 📄 Lokal |
-| `streams/` | Live-Stream-Logs .txt/.jsonl (nicht in Git) | 📄 Lokal |
-| `logs/` | Debug-Logs (nicht in Git) | 📄 Lokal |
-| `.github/prompts/` | Copilot Workflow-Prompts | ✅ Vorhanden |
-
-### Zertifizierungsaufgaben
-
-| # | Titel | Thema |
-|---|--|--|
-| 1 | 🏗️ Kernkonzepte | Architektur, Tools, Task-Flows, OpenAI-API |
-| 2 | 📱 Telegram Bot | Setup, Webhook, Sicherheit, Sequenzdiagramm |
-| 3 | ⚙️ openclaw.json | Alle Parameter, Sandbox-Modi, Guardrails |
-| 4 | 🔐 Sicherheitsarchitektur | GuardrailProvider, Docker, Fail-Closed |
-| 5 | 🐳 Docker Compose | Orchestrierung, Volumes, Netzwerke |
-| 6 | 🏆 Master-Zertifizierung | Audit, Guardrail-Skript, Best Practices, Abschluss |
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
+[![OpenAI API](https://img.shields.io/badge/OpenAI-API-green?logo=openai)](https://platform.openai.com)
+[![Docker](https://img.shields.io/badge/Docker-Sandbox-2496ED?logo=docker)](https://docker.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 ---
 
-## Benutzung
+## Was ist das?
 
-### Voraussetzungen
+Ein Python-CLI, das einen KI-Agenten vollautomatisch durch **6 Zertifizierungsaufgaben** des [OpenClaw](https://github.com/jokicdanijel)-Systems führt. Jede Aufgabe wird per OpenAI Streaming-API live im Terminal ausgeführt und als Markdown-Report gespeichert.
+
+**Features:**
+- 🎯 **6 Prüfungsaufgaben** — Architektur, Telegram, Konfiguration, Sicherheit, Docker, Master-Audit
+- 📡 **Live-Streaming** — API-Antworten werden in Echtzeit im Terminal angezeigt
+- 📝 **Automatische Reports** — Markdown + JSON-Lines + Raw-Text pro Aufgabe
+- 🔄 **Retry-Logik** — 3× Retry mit exponentiellem Backoff (1s → 2s → 4s)
+- 🐳 **Docker-Sandbox** — Isolierte Ausführung via Dockerfile + Watchdog
+- 🖥️ **Interaktives Menü** — Rich-basiertes TUI mit Farbausgabe
+
+---
+
+## Schnellstart
+
+### 1. Repository klonen
 
 ```bash
-# Python-venv aktivieren
-source /home/danijel-jd/.openclaw/.venv/bin/activate
+git clone https://github.com/jokicdanijel/openclaw-cert-cli.git
+cd openclaw-cert-cli
+```
 
-# .env aus Vorlage anlegen und OPENAI_API_KEY eintragen
+### 2. Abhängigkeiten installieren
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install rich openai python-dotenv
+```
+
+Oder automatisch:
+
+```bash
+bash setup.sh
+```
+
+### 3. API-Key konfigurieren
+
+```bash
 cp .env.example .env
-nano .env
+nano .env   # OPENAI_API_KEY eintragen
 ```
 
-### Starten (empfohlen)
-
-```bash
-bash start.sh
-```
-
-### Direkt via Python
+### 4. Starten
 
 ```bash
 # Interaktives Menü
 python3 openclaw_cert.py
 
-# Einzelne Aufgabe (z. B. Aufgabe 3)
-python3 openclaw_cert.py 3
-
-# Alle Aufgaben vollautomatisch
+# Oder direkt alle Aufgaben
 python3 openclaw_cert.py all
-
-# Nur Reports zusammenfassen (ohne API)
-python3 openclaw_cert.py report
-
-# Finale Zusammenfassung generieren
-python3 openclaw_cert.py ende
-
-# KI-Dokumentation generieren
-python3 openclaw_cert.py docs
-
-# Debug-Modus (Logging auf stderr + Datei)
-python3 openclaw_cert.py --debug 1
 ```
 
-### Umgebungsvariablen (`.env`)
+---
+
+## Verwendung
+
+| Befehl | Beschreibung |
+|---|---|
+| `python3 openclaw_cert.py` | Interaktives Menü mit allen Optionen |
+| `python3 openclaw_cert.py all` | Alle offenen Aufgaben automatisch durchlaufen |
+| `python3 openclaw_cert.py 3` | Einzelne Aufgabe ausführen (z.B. Aufgabe 3) |
+| `python3 openclaw_cert.py report` | Gesamtreport aus vorhandenen Reports generieren |
+| `python3 openclaw_cert.py ende` | Finale Zusammenfassung mit Zertifizierungsstatus |
+| `python3 openclaw_cert.py docs` | CLI-Dokumentation per KI generieren |
+| `python3 openclaw_cert.py --debug all` | Debug-Modus mit erweitertem Logging |
+
+### Menü-Optionen
+
+```
+[1-6]  Einzelne Aufgabe ausführen (Live-Streaming + Speichern)
+[a]    Alle offenen Aufgaben vollautomatisch ausführen
+[s]    Speicher-Konfiguration anpassen
+[l]    Gespeicherte Stream-Dateien anzeigen
+[r]    Report einer Aufgabe anzeigen
+[g]    Gesamtreport generieren
+[d]    CLI-Dokumentation per KI generieren
+[e]    Finale Zusammenfassung erstellen
+[q]    Beenden
+```
+
+---
+
+## Die 6 Zertifizierungsaufgaben
+
+| #  | Aufgabe | Inhalt |
+|----|---------|--------|
+| 1  | 🏗️ Kernkonzepte | Agenten-Architektur, Gateway-Rolle, Tools & Plugins, Task-Flows |
+| 2  | 📱 Telegram Bot | BotFather-Setup, Webhook, Kommunikationsfluss, Sicherheit |
+| 3  | ⚙️ openclaw.json | Alle Parameter, Sandbox-Modi, Docker-Backend, Guardrails |
+| 4  | 🔐 Sicherheitsarchitektur | GuardrailProvider, Docker-Sandboxing, Fail-Closed-Prinzip |
+| 5  | 🐳 Docker Compose | Orchestrierung, Services, Volumes, Netzwerke |
+| 6  | 🏆 Master-Zertifizierung | Sicherheits-Audit, Guardrail-Skript, Best Practices |
+
+---
+
+## Konfiguration
+
+Erstelle eine `.env` aus der Vorlage:
 
 ```env
-OPENAI_API_KEY=sk-...         # Pflicht
-OPENCLAW_MODEL=gpt-5.4-nano   # Standard: gpt-4o
-OPENCLAW_DEBUG=false          # true = Debug-Logging
+OPENAI_API_KEY=sk-proj-...    # Pflicht — dein OpenAI API-Key
+OPENCLAW_MODEL=gpt-4o         # Modell (Standard: gpt-4o)
+OPENCLAW_DEBUG=false           # true = Debug-Logging in logs/
+```
+
+---
+
+## Projektstruktur
+
+```
+openclaw-cert-cli/
+├── openclaw_cert.py        # Haupt-CLI (Menü, Streaming, Reports)
+├── listener.py             # Live-Listener für Streams & Logs
+├── watchdog.sh             # Docker-Watchdog (5-Min-Automatisierung)
+├── Dockerfile              # Docker-Sandbox für isolierte Ausführung
+├── setup.sh                # Automatisches Setup (venv + Pakete + .env)
+├── start.sh                # Starter-Skript
+├── .env.example            # Konfigurationsvorlage
+├── .gitignore
+├── cert-cli-uc/            # Use-Case-Verzeichnis
+│   ├── openclaw_cert.py
+│   ├── README.md
+│   └── start.sh
+├── reports/                # Generierte Markdown-Reports (nicht in Git)
+│   ├── task_1_*.md
+│   ├── task_2_*.md
+│   ├── ...
+│   └── FINALE_ZUSAMMENFASSUNG_*.md
+├── streams/                # Live-Stream-Logs (nicht in Git)
+│   ├── stream_*_*.txt      # Raw-Chunks
+│   └── stream_*_*.jsonl    # JSON-Lines mit Timestamps
+└── logs/                   # Debug-Logs (nicht in Git)
 ```
 
 ---
@@ -92,51 +152,83 @@ OPENCLAW_DEBUG=false          # true = Debug-Logging
 ```
 openclaw_cert.py
 ├── StreamTee          — Live-Streaming in Terminal + .txt + .jsonl
-├── run_task()         — Einzelaufgabe mit 3× Retry (1s→2s→4s Backoff)
+├── run_task()         — Einzelaufgabe mit 3× Retry (expon. Backoff)
 ├── run_all_tasks()    — Vollautomatischer Batch-Durchlauf
 ├── generate_docs()    — KI-gestützte CLI-Dokumentation
-├── generate_finale_readme() — Finale Zusammenfassung mit Task-Status
-├── startup_display()  — README-Anzeige beim Start (Gedächtnis-Aktivierung)
-└── main_menu()        — Interaktives Hauptmenü
+├── generate_finale_readme() — Finale Zusammenfassung
+├── startup_display()  — README-Anzeige beim Start
+└── main_menu()        — Interaktives Rich-Menü
 ```
 
-**Streaming-Ausgabe je Aufgabe:**
-- `reports/task_N_<titel>.md` — fertiger Markdown-Report
-- `streams/stream_N_<titel>_<ts>.txt` — Raw-Chunks (live-geflusht)
-- `streams/stream_N_<titel>_<ts>.jsonl` — JSON-Lines mit Timestamps
+**Pro Aufgabe werden 3 Dateien erzeugt:**
+
+| Datei | Format | Inhalt |
+|---|---|---|
+| `reports/task_N_<titel>.md` | Markdown | Fertiger Report |
+| `streams/stream_N_<titel>_<ts>.txt` | Text | Raw-Chunks (live-geflusht) |
+| `streams/stream_N_<titel>_<ts>.jsonl` | JSON-Lines | Chunks mit Timestamps |
+
+---
+
+## Docker-Sandbox
+
+Die CLI kann in einer isolierten Docker-Umgebung ausgeführt werden:
+
+```bash
+# Image bauen
+docker build -t openclaw-cert-cli .
+
+# Einzelne Aufgabe im Container
+docker run --rm --env-file .env \
+  -v $(pwd)/reports:/app/reports \
+  openclaw-cert-cli 3
+
+# Alle Aufgaben
+docker run --rm --env-file .env \
+  -v $(pwd)/reports:/app/reports \
+  openclaw-cert-cli all
+```
+
+### Watchdog (automatisch alle 5 Minuten)
+
+```bash
+# Einmal-Check: fehlende Tasks ausführen
+bash watchdog.sh --once
+
+# Endlos-Watchdog (alle 5 Min)
+bash watchdog.sh
+
+# Status anzeigen
+bash watchdog.sh --status
+```
 
 ---
 
 ## Sicherheit
 
-- `.env` ist in `.gitignore` — wird **niemals** eingecheckt
-- API-Key **niemals** im Chat oder in Code eintragen
-- Logs enthalten keine API-Keys
+- `.env` ist in `.gitignore` — wird **niemals** committed
+- API-Keys erscheinen nicht in Logs oder Reports
+- Docker-Container läuft als non-root User (`openclaw`, UID 1000)
+- Container ist read-only mit Memory-Limit (512 MB)
 - Kein Absturz bei fehlendem `python-dotenv` — stiller Fallback auf `os.environ`
 
 ---
 
-## Commit-Historie
+## Anforderungen
 
-| Commit | Beschreibung |
-|---|---|
-| `4c90bae` | fix: max_tokens → max_completion_tokens + import openai repariert |
-| `efba101` | feat: python-dotenv Support |
-| `fcb2cde` | fix: tee.chunks=[] entfernt + VS Code venv-Interpreter |
-| `aba0cf1` | feat: Retry-Logik, Debug-Logging, startup_display, ende, docs + Bugfixes |
-| `886d925` | Initial commit: OpenClaw Master-Zertifizierungs-CLI v1.0 |
+- **Python** 3.12+
+- **Pakete:** `rich`, `openai`, `python-dotenv`
+- **OpenAI API-Key** mit Zugriff auf das konfigurierte Modell
+- **Docker** (optional, für Sandbox-Modus)
 
 ---
 
-## Zertifizierungsstatus
+## Autor
 
-**Datum:** 2026-04-08  
-**Modell:** `gpt-5.4-nano`  
-**Status:** ✅ ALLE 6 AUFGABEN ABGESCHLOSSEN — Firefly Copilot zertifiziert
+**Danijel Jokic** · [HyperDashboard-ONE.DE](https://hyperdashboard-one.de)
 
 ---
 
-## Autor & Kontakt
+## Lizenz
 
-Generiert am 2026-04-08 nach README_TEMPLATE.md.  
-Bei Fragen: **Danijel Jokic** · HyperDashboard-ONE.DE
+MIT — siehe [LICENSE](LICENSE) für Details.
