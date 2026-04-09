@@ -24,6 +24,12 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Test-Artefakte
+htmlcov/
+.pytest_cache/
+.coverage
+
 # Temporäre Artefakte
 ]
 projekte.db
+.offline-markdown-preview/
