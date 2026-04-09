@@ -59,4 +59,4 @@ echo -e "${GREEN}✓ Bereit${NC}"
 echo ""
 
 # ── Starten ───────────────────────────────────────────────────────
-exec "$PYTHON" openclaw_cert.py "$@"
+exec "$PYTHON" -m openclaw_cert "$@"

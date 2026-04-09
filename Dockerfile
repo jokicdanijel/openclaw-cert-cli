@@ -9,7 +9,7 @@ RUN useradd -m -u 1000 openclaw
 WORKDIR /app
 
 # Nur notwendige Dateien kopieren (kein .env, kein .git)
-COPY openclaw_cert.py ./
+COPY openclaw_cert/ ./openclaw_cert/
 COPY start.sh ./
 COPY .env.example ./
 COPY cert-cli-uc/ ./cert-cli-uc/
@@ -28,5 +28,5 @@ ENV OPENCLAW_MODEL=gpt-4o
 ENV OPENCLAW_DEBUG=false
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["python3", "openclaw_cert.py"]
+ENTRYPOINT ["python3", "-m", "openclaw_cert"]
 CMD ["--help"]

@@ -1,5 +1,5 @@
 """
-Shared Fixtures für OpenClaw Cert-CLI Tests.
+Shared Fixtures für OpenClaw Cert-CLI Tests (modulare Struktur).
 """
 
 import json
@@ -13,7 +13,7 @@ from rich.console import Console
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Verzeichnis-Isolation: Tests schreiben nie ins echte Projektverzeichnis
+# Verzeichnis-Isolation
 # ─────────────────────────────────────────────────────────────────────────────
 
 @pytest.fixture
@@ -26,10 +26,10 @@ def isolated_dirs(tmp_path, monkeypatch):
     streams.mkdir()
     logs.mkdir()
 
-    import openclaw_cert
-    monkeypatch.setattr(openclaw_cert, "REPORT_DIR", reports)
-    monkeypatch.setattr(openclaw_cert, "STREAM_DIR", streams)
-    monkeypatch.setattr(openclaw_cert, "LOG_DIR", logs)
+    from openclaw_cert import config
+    monkeypatch.setattr(config, "REPORT_DIR", reports)
+    monkeypatch.setattr(config, "STREAM_DIR", streams)
+    monkeypatch.setattr(config, "LOG_DIR", logs)
 
     return {"reports": reports, "streams": streams, "logs": logs, "root": tmp_path}
 
@@ -37,20 +37,20 @@ def isolated_dirs(tmp_path, monkeypatch):
 @pytest.fixture
 def silent_console(monkeypatch):
     """Ersetzt die globale Console durch eine, die in einen StringIO schreibt."""
-    import openclaw_cert
+    from openclaw_cert import config
     buf = StringIO()
     quiet = Console(file=buf, force_terminal=True, width=120)
-    monkeypatch.setattr(openclaw_cert, "console", quiet)
+    monkeypatch.setattr(config, "console", quiet)
     return buf
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Fake-Reports für status_table / generate_combined_report
+# Fake-Reports
 # ─────────────────────────────────────────────────────────────────────────────
 
 @pytest.fixture
 def fake_reports(isolated_dirs):
-    """Erstellt Dummy-Reports für Tasks 1-6 im temp reports-Verzeichnis."""
+    """Erstellt Dummy-Reports für Tasks 1-6."""
     reports_dir = isolated_dirs["reports"]
     paths = []
     for i in range(1, 7):
@@ -61,7 +61,7 @@ def fake_reports(isolated_dirs):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# OpenAI Mock – Fake Streaming Response
+# OpenAI Mock — Fake Streaming Response
 # ─────────────────────────────────────────────────────────────────────────────
 
 class FakeDelta:
@@ -98,8 +98,8 @@ def mock_openai_client():
         if chunks is None:
             chunks = ["Hallo ", "Welt! ", "Das ist ", "ein Test."]
         client.chat.completions.create.return_value = FakeStream(chunks)
+        return client
 
-    # Default: 4 Chunks
-    make_stream()
-    client._configure_stream = make_stream
+    make_stream()  # Default setzen
+    client.make_stream = make_stream
     return client

@@ -1,7 +1,7 @@
 [project]
 name = "openclaw-cert-cli"
-version = "1.0.0"
-description = "OpenClaw Master-Zertifizierungs-CLI"
+version = "2.0.0"
+description = "OpenClaw Master-Zertifizierungs-CLI — Modulare Paketstruktur"
 requires-python = ">=3.11"
 dependencies = [
     "openai",
@@ -15,6 +15,9 @@ test = [
     "pytest-cov>=5.0",
     "pytest-mock>=3.14",
 ]
+
+[project.scripts]
+openclaw-cert = "openclaw_cert.__main__:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
